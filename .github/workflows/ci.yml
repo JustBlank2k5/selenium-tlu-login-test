@@ -5,10 +5,15 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    env:
+      TLU_USERNAME: ${{ secrets.TLU_USERNAME }}
+      TLU_PASSWORD: ${{ secrets.TLU_PASSWORD }}
 
     steps:
       - name: Checkout repository
