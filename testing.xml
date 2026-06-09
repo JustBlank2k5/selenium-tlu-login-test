@@ -2,7 +2,7 @@
 <suite name="TLU Login Test Suite">
     <test name="Login Tests">
         <classes>
-            <class name="com.nguyentuanminh.ok.LoginTest"/>
+            <class name="com.nguyetuanminh.ok.LoginTest"/>
         </classes>
     </test>
 </suite>

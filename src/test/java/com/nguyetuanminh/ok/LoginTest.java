@@ -21,9 +21,9 @@ public class LoginTest {
     private WebDriverWait wait;
 
     private static final String BASE_URL = "https://sinhvien1.tlu.edu.vn/#/login";
-    private static final String USERNAME = "2351067115";
-    private static final String CORRECT_PASSWORD = "Thien@172004";
-    private static final String WRONG_PASSWORD = "WrongPassword123";
+    private static final String USERNAME = System.getenv("TLU_USERNAME") != null ? System.getenv("TLU_USERNAME") : "2351067101";
+    private static final String CORRECT_PASSWORD = System.getenv("TLU_PASSWORD") != null ? System.getenv("TLU_PASSWORD") : "068205009904";
+    private static final String WRONG_PASSWORD = "11111111";
 
     @BeforeMethod
     public void setUp() {
