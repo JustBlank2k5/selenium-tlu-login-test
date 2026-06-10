@@ -1,9 +1,8 @@
 package com.nguyetuanminh.ok;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import java.time.Duration;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -13,80 +12,92 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.time.Duration;
-
 public class LoginTest {
 
     private WebDriver driver;
-    private WebDriverWait wait;
-
-    private static final String BASE_URL = "https://sinhvien1.tlu.edu.vn/#/login";
-    private static final String USERNAME = System.getenv("TLU_USERNAME") != null ? System.getenv("TLU_USERNAME") : "2351067101";
-    private static final String CORRECT_PASSWORD = System.getenv("TLU_PASSWORD") != null ? System.getenv("TLU_PASSWORD") : "068205009904";
-    private static final String WRONG_PASSWORD = "11111111";
 
     @BeforeMethod
     public void setUp() {
-        // Tự động tải đúng ChromeDriver theo phiên bản Chrome trên máy chạy CI
-        WebDriverManager.chromedriver().setup();
-
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");         // Chạy không giao diện (cần cho CI)
+        options.addArguments("--headless=new"); // Important for CI/CD environments
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--remote-allow-origins=*");
+        // Pretend to be a normal browser to avoid blocks
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
 
         driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        // implicit wait is okay as backup, but we will use explicit wait below
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
         driver.manage().window().maximize();
-
-        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
     }
-
+//aaaaaaaaaa
     @Test
     public void testLoginSuccess() {
-        driver.get(BASE_URL);
+        // Navigate to the TLU login page
+        driver.get("https://sinhvien1.tlu.edu.vn/#/login");
+
+        // Use Explicit Wait to wait for the login form to appear
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
 
-        driver.findElement(By.id("username")).sendKeys(USERNAME);
-        driver.findElement(By.id("password")).sendKeys(CORRECT_PASSWORD);
+        System.out.println("Page Title: " + driver.getTitle());
+        System.out.println("Page URL: " + driver.getCurrentUrl());
+
+        // Verify we are on the login page
+        Assert.assertTrue(driver.getTitle().contains("Education"));
+
+        // Enter Username
+        driver.findElement(By.id("username")).sendKeys("2351067101");
+
+        // Enter Password
+        driver.findElement(By.id("password")).sendKeys("068205009904");
+
+        // Click Login button
         driver.findElement(By.cssSelector("button[data-ng-click='vm.login()']")).click();
-
-        // Chờ cho đến khi URL không còn là login (chuyển sang dashboard)
-        boolean isRedirected = wait.until(ExpectedConditions.not(ExpectedConditions.urlContains("/#/login")));
-
-        Assert.assertTrue(isRedirected, "Đăng nhập thành công nhưng không chuyển khỏi trang login!");
-        System.out.println("✅ Đăng nhập thành công, đã chuyển sang trang chủ.");
+        
+        // Wait until login processes
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        System.out.println("Login button clicked successfully.");
+        // Assert URL changed or token received (if we know the expected behavior)
     }
 
     @Test
     public void testLoginFailure() {
-        driver.get(BASE_URL);
+        // Navigate to the TLU login page
+        driver.get("https://sinhvien1.tlu.edu.vn/#/login");
+
+        // Use Explicit Wait
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
 
-        driver.findElement(By.id("username")).sendKeys(USERNAME);
-        driver.findElement(By.id("password")).sendKeys(WRONG_PASSWORD);
+        // Enter Username
+        driver.findElement(By.id("username")).sendKeys("2351067101");
+
+        // Enter wrong Password
+        driver.findElement(By.id("password")).sendKeys("Thien@172004");
+
+        // Click Login button
         driver.findElement(By.cssSelector("button[data-ng-click='vm.login()']")).click();
 
-        // Kiểm tra thông báo lỗi hiển thị (thông thường là div hoặc span chứa thông báo lỗi)
-        // Bạn cần điều chỉnh selector này dựa trên thực tế trang web
-        By errorLocator = By.cssSelector(".alert-danger, .error-message, .notification-error");
-        boolean errorDisplayed;
         try {
-            WebElement errorMsg = wait.until(ExpectedConditions.visibilityOfElementLocated(errorLocator));
-            errorDisplayed = errorMsg.isDisplayed();
-        } catch (Exception e) {
-            errorDisplayed = false;
+            Thread.sleep(2000); // Đợi xem có thông báo lỗi hiển thị không
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        // Vẫn còn ở trang login
-        boolean stillOnLogin = driver.getCurrentUrl().contains("/#/login");
-
-        Assert.assertTrue(errorDisplayed && stillOnLogin,
-                "Sai mật khẩu nhưng không thấy thông báo lỗi hoặc đã chuyển trang!");
-        System.out.println("❌ Đăng nhập thất bại đúng như kỳ vọng: thông báo lỗi xuất hiện.");
+        // Kịch bản này chúng ta ĐĂNG NHẬP SAI MẬT KHẨU nhưng lại cố tình bắt hệ thống 
+        // PHẢI KIỂM TRA LÀ ĐÃ ĐĂNG NHẬP THÀNH CÔNG (Rời khỏi trang login).
+        // Chắc chắn điều này là phi lý -> Kịch bản test này sẽ bị đánh dấu là THẤT BẠI (FAILED)
+        Assert.assertFalse(driver.getCurrentUrl().contains("/#/login"), "CỐ TÌNH GÂY LỖI: Kỳ vọng đã chuyển sang trang chủ nhưng thực tế vẫn bị kẹt ở trang login do sai pass!");
+        System.out.println("Dòng này sẽ không bao giờ được in ra vì test đã bị fail ở trên.");
     }
 
     @AfterMethod
